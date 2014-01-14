@@ -1,0 +1,210 @@
+body {
+	margin: 0px;
+	padding: 0px;
+	overflow:hidden;
+}
+* {
+	z-index: 10;
+}
+.ui-button {
+	font-size: 0.9em;
+}
+.context-menu-list, .ui-dialog, .ui-tooltip {
+	z-index: 999999 !important; 
+}
+.ui-tooltip {
+	font-style: normal;
+	font-size: 85%;
+	max-width: 600px;
+	min-width: 350px;
+}
+.ui-tooltip img {
+	width: 14px;
+	height: 14px;
+	margin-right: 2px;
+}
+.ui-tooltip b {
+	float: left;
+}
+.ui-tooltip span {
+	float: right;
+}
+#toolmenu {
+	width: 800px;
+	height: 20px;
+
+	background: rgb(44, 62, 80);
+
+	position: fixed;
+	top: 0%;
+	left: 50%;
+	margin-left: -400px;
+
+	padding: 5px;
+	padding-left: 10px;
+
+	border: 1px solid orange;
+	border-top: 0;
+
+	z-index: 99999;
+}
+#toolmenu > span {
+	color: white;
+	padding: 5px 10px 4px 10px;
+	background-color: rgb(192, 57, 43);
+	font-family: Roboto;
+	height: 100%;
+}
+#toolmenu > span:hover {
+	background-color: rgb(231, 76, 60);
+	cursor: pointer;
+}
+#toolmenu > .actionbutton {
+	float: right;
+	margin: 0;
+	margin-top: -5px;
+	margin-right: 5px;
+	background-color: rgb(211, 84, 0);
+}
+#toolmenu > .actionbutton:hover {
+	background-color: rgb(230, 126, 34);
+}
+#settingsmenu {
+	width: 750px;
+	height: 45px;
+
+	background: rgb(44, 62, 80);
+
+	position: fixed;
+	top: 30px;
+	left: 50%;
+	margin-left: -375px;
+
+	border: 1px solid orange;
+	border-top: 1px solid rgb(44, 62, 80);
+	padding: 5px;
+	padding-left: 10px;
+
+	z-index: 99999;
+
+	display: none;
+}
+#settingsmenu > * {
+	vertical-align: middle;
+	margin-right: 15px;
+	color: white;
+}
+#settingsmenu > input, #settingsmenu > select {
+	color: black;
+}
+#settingsmenu > .settingSlider {
+	margin-right: 25px;
+}
+#settingsmenu > button {
+	color: black;
+	height: 32px;
+}
+.sb-disabled {
+	border-color: red;
+}
+.settinglabel {
+	position: absolute;
+	font-size: 70%;
+	bottom: 5px;
+}
+#dockmenu {
+	display: none;
+}
+#dockmenu > span {
+	position: absolute;
+	word-wrap: break-word;
+	padding: 4px;
+	background-color: rgba(150, 150, 255, 0.4);
+	z-index: 99998;
+}
+#dockmenu > span[dock-active=true] {
+	cursor: pointer;
+	background-color: rgba(125, 125, 255, 0.6);
+}
+#dockmenu > span:hover {
+	cursor: pointer;
+	background-color: rgb(100, 100, 255);
+}
+#dock_left, #dock_right {
+	width: 14px;
+	vertical-align: middle;
+}
+#dock_top, #dock_bottom {
+	text-align: center;
+	height: 14px;
+}
+#workspace {
+	width: 100%;
+	height: 100%;
+}
+.component {
+	cursor: move;
+	z-index: 0;
+	position: absolute;
+}
+.comp_rect {
+	width: 100px;
+	height: 100px;
+	background-color: white;
+	border: 1px solid black;
+	z-index: 5;
+}
+.comp_minimap {
+	width: 100px;
+	height: 100px;
+	background-color: white;
+	z-index: 6;
+}
+.comp_icon {
+	width: 32px;
+	height: 32px;
+	background-color: white;
+	background-size: 100% 100%;
+	z-index: 6;
+}
+.comp_infobar {
+	width: 100px;
+	height: 25px;
+	z-index: 6;
+}
+.comp_circle {
+	width: 100px;
+	height: 100px;
+	border-radius: 50%;
+	background-color: white;
+}
+.lightcomp {
+	z-index: 10;
+}
+.comp_text {
+	width: 200px;
+	height: 25px;
+	white-space: nowrap;
+}
+.selectedComponent {
+	box-shadow: 0px 0px 10px red;
+}
+.bartypeselector {
+	margin-right: 25px !important;
+}
+.bartypeselector .ui-button-text{
+	height: 18px;
+}
+#icon-selector-dialog > img {
+	cursor: pointer;
+}
+#version {
+	position: absolute;
+	top: 0px;
+	left: 0px;
+	font-family: Roboto;
+	font-size: 25px;
+	color: black;
+	margin: 0;
+	margin-right: 5px;
+}

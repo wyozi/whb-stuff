@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title></title>
+    <link rel="stylesheet" href="css/ui-lightness/jquery-ui-1.10.3.custom.min.css" />
+    <link href='http://fonts.googleapis.com/css?family=Roboto' rel='stylesheet' type='text/css'>
+    <link href="jquery.contextMenu.css" rel="stylesheet" type="text/css" />
+    <link href="css/whb.7.css" rel="stylesheet" type="text/css" />
+    <link href="css/dark-glass/sidebar.css" rel="stylesheet" type="text/css" />
+	<link rel='stylesheet' href='spectrum.css' />
+</head>
+<body>
+	<p id="version">WHB v. 8</p>
+
+	<div id="toolmenu">
+		<span id="btn_rect">RECTANGLE</span>
+		<!-- <span id="btn_circle">CIRCLE</span> -->
+		<span id="btn_text">TEXT</span>
+		<span id="btn_minimap">MINIMAP</span>
+		<span id="btn_infobar">INFOBAR</span>
+		<span id="btn_icon">ICON</span>
+
+		<span id="btn_openhelp" class="actionbutton" style="background-color: #428BCA">HELP</span>
+		<span id="btn_close" class="actionbutton">CLOSE</span>
+		<span id="btn_copylua" class="actionbutton">COPY LUA</span>
+		<div style="display: inline">
+			<span id="btn_uselocally" class="actionbutton" style="border-top-left-radius: 0; border-bottom-left-radius: 0">LOCAL</span>
+			<span id="btn_startusage" class="actionbutton" style="border-right: 1px solid rgb(44, 62, 80); margin-right: 0; border-top-right-radius: 0; border-bottom-right-radius: 0;">GLOBAL</span>
+		</div>
+	</div>
+	<div id="settingsmenu">
+	</div>
+	<div id="dockmenu">
+		<span id="dock_left">LEFT</span>
+		<span id="dock_top">TOP</span>
+		<span id="dock_right">RIGHT</span>
+		<span id="dock_bottom">BOTTOM</span>
+	</div>
+
+	<div id="configmenu">
+		<input type="checkbox" id="dockhelpercb" />
+		<label for="dockhelpercb" title="Show anchoring helpers.">SHOW ANCHOR</label>
+
+		<input type="checkbox" id="autodockcb" />
+		<label for="autodockcb" title="Should moving components automatically change their anchors to the nearest edges? Leave enabled if you don't know what this does.">AUTO-ANCHOR</label>
+
+		<br>
+
+		<input type="checkbox" id="gridcb" />
+		<label for="gridcb" title="Grid allows more precise positioning of components.">ENABLE GRID</label>
+
+		<br><br>
+
+		Usage Target:<br>
+		<input id="usagetarg" style="width: 100px" value="normal" title="showhudtargets" />
+	</div>
+
+	<div id="workspace"></div>
+	<div id="dockline"></div>
+
+	<div id="icon-selector-dialog">
+		<img src="http://gmod.icemist.co/whb/silkicons/coins.png">
+		<img src="http://gmod.icemist.co/whb/silkicons/money.png">
+		<img src="http://gmod.icemist.co/whb/silkicons/shield.png">
+		<img src="http://gmod.icemist.co/whb/silkicons/heart.png">
+		<img src="http://gmod.icemist.co/whb/silkicons/world.png">
+		<img src="http://gmod.icemist.co/whb/silkicons/image.png">
+		<img src="http://gmod.icemist.co/whb/silkicons/ipod.png">
+		<img src="http://gmod.icemist.co/whb/silkicons/bell.png">
+		<img src="http://gmod.icemist.co/whb/silkicons/emoticon_evilgrin.png">
+		<img src="http://gmod.icemist.co/whb/silkicons/time.png">
+		<img src="http://gmod.icemist.co/whb/silkicons/transmit.png">
+	</div>
+
+	<div id="layermenu">
+		<div id="layersheader">LAYERS</div>
+		<ul id="layers">
+		</ul>
+	</div>
+
+	<script src="http://ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+	<script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/jquery-ui.min.js"></script>
+	<script src="jquery.contextMenu.min.js"></script>
+	<script src="jquery.line.js"></script>
+	<script src="spectrum.min.js"></script>
+	<script src="jquery.jeditable.mini.js"></script>
+	<script src="js/jquery.sidebar.min.js"></script>
+
+	<script src="js/whb.utils.7.js"></script>
+	<script src="js/whb.shapes.7.js"></script>
+
+	<script type="text/javascript">
+
+		// cheers http://stackoverflow.com/questions/210717/using-jquery-to-center-a-div-on-the-screen
+		$.fn.center = function () {
+			this.css("position","absolute");
+			this.css("top", Math.max(0, (($(window).height() - $(this).outerHeight()) / 2) + 
+							$(window).scrollTop()) + "px");
+			this.css("left", Math.max(0, (($(window).width() - $(this).outerWidth()) / 2) + 
+							$(window).scrollLeft()) + "px");
+			return this;
+		}
+
+		$("#icon-selector-dialog").attr("title", "Select an Icon").dialog({
+			autoOpen: false,
+			height: 300,
+			width: 350,
+			modal: true,
+			buttons: {
+				"Close": function() {
+					$( this ).dialog( "close" );
+				}	
+			},
+			close: function(event, ui) { $("#icon-selector-dialog > img").unbind("click"); } // Fixes all icons being the same on change
+		});
+
+		$("#configmenu").sidebar({
+			duration: 50
+		});
+		$("#configmenu").tooltip({
+			content: function() {
+				if ($(this).attr("title") == "showhudtargets") {
+					return "HUD Usage Targets allow you to use multiple HUDs depending on player state. Possible targets:<br><hr>" +
+					"<b><img src=\"https://raw.github.com/garrynewman/garrysmod/master/garrysmod/gamemodes/base/icon24.png\">normal</b> <span>Normal HUD</span><br>" +
+					"<b><img src=\"https://raw.github.com/garrynewman/garrysmod/master/garrysmod/gamemodes/terrortown/icon24.png\">tttspec</b> <span>Shown to TTT Spectators</span><br>";
+				}
+				return $(this).attr("title");
+			},
+			position: {
+				my: "left center",
+				at: "right+10 center",
+			},
+		});
+
+		$("#dockhelpercb").button().change(function() {
+			var isEnabled = $(this).is(":checked");
+
+			if (!isEnabled)
+				hideDocking();
+			else
+				updateDocking();
+		});
+		$("#gridcb").button();
+
+		$("#autodockcb").button().prop("checked", true).button("refresh");
+		$("#usagetarg").button()
+			.css({
+				'font' : 'inherit',
+				'color' : 'black',
+				'text-align' : 'left',
+				'outline' : 'none',
+				'cursor' : 'text'
+			});
+
+		$("#layersheader").button();
+		$( "#layers" ).sortable({
+			update: function( event, ui ) {
+				updateLayerElements();
+			}
+		});
+		$( "#layers" ).disableSelection();
+
+		// Clear selected shape on click outside anything else
+		$("html").click(function(e) {
+			if (e.target == this)
+				selectShape(null);
+		})
+
+		$(function(){
+		    $.contextMenu({
+		        selector: '#workspace > *, #layers > li', 
+		        callback: function(key, options) {
+		        	var shape = $(this);
+		        	if (shape.is("li"))
+		        		shape = shape.data("shape");
+
+		            if (key == "delete") {
+		            	removeShape(shape);
+		            }
+		            else if (key == "duplicate") {
+		            	var jsonObj = shape.data("hbshape").getJSONObject(shape);
+		            	jsonObj.top = shape.offset().top + 10;
+		            	jsonObj.left = shape.offset().left + 10;
+		            	var newShape = jsonObjToShape(jsonObj);
+		            	newShape.data("shapename", "Duped " + shape.data("shapename"));
+		            	selectShape(newShape);
+		            }
+		            else if (key == "center") {
+		            	shape.center();
+		            }
+		            else if (key == "btf") {
+		            	shape.parent().append(shape);
+		            	updateLayers();
+		            }
+		            else if (key == "mvback") {
+		            	shape.parent().prepend(shape);
+		            	updateLayers();
+		            }
+		        },
+		        items: {
+		            "delete": {name: "Delete", icon: "delete"},
+		            "duplicate": {name: "Duplicate", icon: "copy"},
+		            "center": {name: "Move to Center", icon: "edit"},
+		            "btf": {name: "Bring to Front", icon: "btf"},
+		            "mvback": {name: "Move to Back", icon: "mvback"}
+		        }
+		    });
+		});
+
+		var fonts = [
+			{
+				Name: "DermaDefault",
+				Font: "Helvetica, Tahoma",
+				GModFontId: "Helvetica"
+			},
+			{
+				Name: "Trebuchet",
+				Font: "Trebuchet MS",
+				GModFontId: "Trebuchet"
+			},
+			{
+				Name: "Roboto",
+				Font: "Roboto",
+				GModFontId: "Roboto"
+			},
+		];
+
+		var selectedShapes = $([]);
+
+		var docklineElement1, docklineElement2;
+
+		function updateDocking() {
+			var shape = selectedShapes[0];
+			if (shape == null)
+				return;
+			shape = $(shape);
+
+			var pos = shape.position();
+			var width = shape.outerWidth();
+			var height = shape.outerHeight();
+
+			var dockedRight = shape.data("dock-right") || false;
+			var dockedBottom = shape.data("dock-bottom") || false; 
+
+			$('#dockline').line(dockedRight ? window.innerWidth : 0, pos.top + height/2, pos.left + width/2, pos.top + height/2, {}, docklineElement1, function(el) {
+				docklineElement1 = el;
+			});
+			$('#dockline').line(pos.left + width/2, dockedBottom ? window.innerHeight : 0, pos.left + width/2, pos.top + height/2, {}, docklineElement2, function(el) {
+				docklineElement2 = el;
+			});
+
+			$("#dockmenu").show();
+			$("#dock_left").position({
+				of: shape,
+				my: "right top",
+				at: "left top",
+				collision: "none none"
+			}).height(height);
+			$("#dock_right").position({
+				of: shape,
+				my: "left top",
+				at: "right top",
+				collision: "none none"
+			}).height(height);
+			$("#dock_top").position({
+				of: shape,
+				my: "left bottom",
+				at: "left top",
+				collision: "none none"
+			}).width(width);
+			$("#dock_bottom").position({
+				of: shape,
+				my: "left top",
+				at: "left bottom",
+				collision: "none none"
+			}).width(width);
+
+			$("#dockmenu > span").attr("dock-active", false);
+
+			(dockedRight ? $("#dock_right") : $("#dock_left")).attr("dock-active", true);
+			(dockedBottom ? $("#dock_bottom") : $("#dock_top")).attr("dock-active", true);
+
+		}
+
+		function autoDock() {
+			selectedShapes.each(function(k, shape) {
+				shape = $(shape);
+
+				var offset = shape.offset();
+				var midx = offset.left - shape.outerWidth()/2;
+				var midy = offset.top - shape.outerHeight()/2;
+
+				var screenmidx = $(window).width()/2;
+				var screenmidy = $(window).height()/2;
+
+				shape.data("dock-right", midx > screenmidx);
+				shape.data("dock-bottom", midy > screenmidy);
+			});
+		}
+
+		$(document).keydown(function(e) {
+
+			if ($(document.activeElement).is("input")) // Prevent autocomplete item selections from triggering keydown
+				return;
+
+			selectedShapes.each(function(k, el) {
+				el = $(el);
+
+				if ($("#dockmenu").is(":visible")) {
+				    switch(e.which) {
+				        case 37: // left
+				        	el.data("dock-right", false);
+				        break;
+
+				        case 38: // up
+				        	el.data("dock-bottom", false);
+				        break;
+
+				        case 39: // right
+				        	el.data("dock-right", true);
+				        break;
+
+				        case 40: // down
+				        	el.data("dock-bottom", true);
+				        break;
+
+				        default: return; // exit this handler for other keys
+				    }
+				    updateDocking(el);
+				}
+				else {
+					var mul = e.shiftKey ? 5 : 1;
+
+				    switch(e.which) {
+				        case 37: // left
+				        	if (e.ctrlKey)
+				        		el.width(el.width() - mul);
+				        	else
+				        		el.offset({left:el.offset().left-mul, top:el.offset().top})
+				        break;
+
+				        case 38: // up
+				        	if (e.ctrlKey)
+				        		el.height(el.height() - mul);
+				        	else
+				        		el.offset({left:el.offset().left, top:el.offset().top-mul})
+				        break;
+
+				        case 39: // right
+				        	if (e.ctrlKey)
+				        		el.width(el.width() + mul);
+				        	else
+				        		el.offset({left:el.offset().left+mul, top:el.offset().top})
+				        break;
+
+				        case 40: // down
+				        	if (e.ctrlKey)
+				        		el.height(el.height() + mul);
+				        	else
+				        		el.offset({left:el.offset().left, top:el.offset().top+mul})
+				        break;
+
+				        default: return; // exit this handler for other keys
+				    }
+				}
+			});
+
+			// Prevent arrow key defaults
+			if (e.which == 37 || e.which == 38 || e.which == 39 || e.which == 40)
+		    	e.preventDefault();
+		});
+
+		function hideDocking() {
+			$("#dockline").empty();
+			$("#dockmenu").hide();
+		}
+
+		function updateSelections() {
+			$("#layers").removeClass("ui-state-active");
+			selectedShapes.each(function(k, el) {
+				$("#layer" + $(el).data("shapeid")).addClass("ui-state-active");
+			});
+
+			$("#workspace > div").removeClass("selectedComponent");
+			selectedShapes.addClass("selectedComponent");
+		}
+
+		function updateLayers() {
+			$("#layers").empty();
+			$("#workspace > *").each(function(k, el) {
+				el = $(el);
+				var liEl = $("<li></li>").addClass("ui-state-default");
+				liEl.append($("<span></span>").addClass("ui-icon").addClass("ui-icon-arrowthick-2-n-s"));
+				liEl.append($("<p></p>").text(el.data("shapename")).editable(function(value, settings) {
+					el.data("shapename", value);
+					return value;
+				}, {
+					select : true
+				}));
+				liEl.data("shape", el);
+				liEl.attr("id", "layer" + el.data("shapeid"));
+				liEl.click(function() {
+					selectShape($(this).data("shape"));
+				})
+				$("#layers").prepend(liEl);
+			});
+
+			updateSelections();
+		}
+
+		function updateLayerElements() {
+			$($("#layers > li").get().reverse()).each(function(k, el) {
+				el = $(el);
+				var shape = el.data("shape");
+				shape.parent().append(shape);
+			});
+		}
+
+		function selectShape(shape, addToExisting) {
+			if (shape != null && selectedShapes.is(shape)) // TEST IF WORKS
+				return false; // already selected
+
+			//shape.parent().append(shape); // Bring to front
+
+			if (shape == null)
+				selectedShapes = $([]);
+			else if (addToExisting)
+				selectedShapes = selectedShapes.add(shape);
+			else
+				selectedShapes = $(shape);
+
+			updateLayers(); // updateLayers also updates selections
+
+			if (shape == null)
+				$("#settingsmenu").hide()
+			else {
+				$("#settingsmenu").show();
+
+				var settingsmenu = $("#settingsmenu");
+				settingsmenu.empty();
+
+				shape.data("hbshape").createSettings(shape, settingsmenu);
+			}
+
+			hideDocking();
+
+			// If docking checkbox enabled, add docking helpers
+			if ($("#dockhelpercb").is(":checked"))
+				updateDocking();
+
+			return true;
+		}
+
+		var shapeIdx = 1;
+
+		function addShape(shape) {
+			var el = shape.createElement();
+			el.draggable({
+				scroll: false,
+				start: function(event, ui) {
+					var shape = $(this);
+
+					// If shape not selected we should select it on unselect everything else
+					if (!selectedShapes.is(shape))
+						selectShape(shape, event.ctrlKey); // If ctrl was down we should just add to existing selected shapes
+
+					selectedShapes.each(function() {
+						var el = $(this);
+						el.data("sd-offset", el.offset());
+				  	});
+
+					if ($("#gridcb").is(":checked")) {
+						// Make sure all components have the same offset; align to 20
+						/* TODO: doesn't work
+						var offset = shape.offset();
+						var topoff = offset.top % 20;
+						var leftoff = offset.left % 20;
+						shape.offset({left: offset.left - leftoff, top: offset.top - topoff});*/
+
+						shape.draggable("option", "grid", [ 20, 20 ]);
+						shape.resizable("option", "grid", [ 20, 20 ]);
+					} else {
+						shape.draggable("option", "grid", false);
+						shape.resizable("option", "grid", false);
+					}
+				},
+				drag: function(event, ui) {
+					var offset = $(this).data("sd-offset");
+					var dt = ui.position.top - offset.top, dl = ui.position.left - offset.left;
+
+					selectedShapes.not(this).each(function() {
+					     var el = $(this), off = el.data("sd-offset");
+					     el.css({top: off.top + dt, left: off.left + dl});
+					});
+
+					if ($("#autodockcb").is(":checked"))
+						autoDock();
+					
+					if ($("#dockmenu").is(":visible"))
+						updateDocking();
+				},
+				stop: function(event, ui) {
+				}
+			});
+
+			el.data("shapeid", shapeIdx++);
+			el.data("shapename", (shape.constructor.name) + " " + el.data("shapeid"));
+			el.data("hbshape", shape);
+
+			// Default dockings
+			el.data("dock-right", false);
+			el.data("dock-bottom", false);
+
+			el.resizable({
+				handles: "all"
+			});
+			el.resize(function() {
+				if ($("#dockmenu").is(":visible"))
+					updateDocking($(this));
+			});
+			el.click(function(ev) {
+				selectShape($(this), ev.ctrlKey);
+			});
+
+		    el.center();
+
+			//el.offset({left: window.innerWidth/2 - el.width()/2, top: window.innerHeight/2 - el.height()/2})
+
+			el.appendTo($("#workspace"));
+
+			updateLayers();
+
+			return el;
+		}
+
+		function removeShape(shape) {
+			if (selectedShapes.is(shape)) {
+				hideDocking();
+				selectedShapes = selectedShapes.not(shape);
+				$("#settingsmenu").hide();
+			}
+			shape.remove();
+			updateLayers();
+		}
+
+		$("#btn_rect").click(function() {
+			selectShape(addShape(new Rect()));
+		});
+		$("#btn_circle").click(function() {
+			selectShape(addShape(new Circle()));
+		});
+		$("#btn_text").click(function() {
+			selectShape(addShape(new Text()));
+		});
+		$("#btn_minimap").click(function() {
+			selectShape(addShape(new Minimap()));
+		});
+		$("#btn_infobar").click(function() {
+			selectShape(addShape(new InfoBar()));
+		});
+		$("#btn_icon").click(function() {
+			selectShape(addShape(new Icon()));
+		});
+
+		function jsonObjToShape(v) {
+			var shape;
+			switch(v.type) {
+				case "configNode":
+					$("#usagetarg").val(v.usagetarg || "normal");
+					return;
+				case "rect":
+					shape = addShape(new Rect());
+					if ("bgColor" in v) {
+						var bgc = validateColorObject(v.bgColor);
+						shape.css("background-color", "rgba(" + bgc.r + ", " + bgc.g + ", " + bgc.b + ", " + (bgc.a || 1) + ")");
+					}
+					if ("bgmod" in v)
+						shape.data("bgmod", v.bgmod);
+					if ("borderColor" in v) {
+						var bgc = validateColorObject(v.borderColor);
+						shape.css("border-color", "rgba(" + bgc.r + ", " + bgc.g + ", " + bgc.b + ", " + (bgc.a || 1) + ")");
+					}
+					if ("borderRadius" in v)
+						shape.css("border-radius", v.borderRadius + "px");
+					break;
+				case "text":
+					shape = addShape(new Text());
+					if ("color" in v) {
+						var bgc = validateColorObject(v.color);
+						shape.css("color", "rgba(" + bgc.r + ", " + bgc.g + ", " + bgc.b + ", " + (bgc.a || 1) + ")");
+					}
+					if ("text" in v)
+						$(shape.children("span")[0]).text(v.text);
+					if ("font" in v) {
+						shape.data("gmodfont", v.font);
+						for (var font in fonts)
+							if (fonts[font].GModFontId == v.font) {
+								shape.css("font-family", fonts[font].Font);
+								break;
+							}
+					}
+					if ("fontSize" in v)
+						shape.css("font-size", v.fontSize + "px");
+					break;
+				case "minimap":
+					shape = addShape(new Minimap());
+					break;
+				case "icon":
+					shape = addShape(new Icon());
+					shape.css("background-image", "url(" + (v.fullurl || "") + ")");
+					shape.css("background-color", "transparent");
+					break;
+				case "infobar":
+					shape = addShape(new InfoBar());
+					if ("borderRadius" in v) {
+						shape.css("border-radius", v.borderRadius + "px");
+						$(shape.children("div")[0]).css("border-radius", v.borderRadius + "px");
+					}
+					if ("healthColor" in v) {
+						var bgc = validateColorObject(v.healthColor);
+						$(shape.children("div")[0]).css("background-color", "rgba(" + bgc.r + ", " + bgc.g + ", " + bgc.b + ", " + (bgc.a || 1) + ")");
+					}
+					if ("dmgColor" in v) {
+						var bgc = validateColorObject(v.dmgColor);
+						shape.css("background-color", "rgba(" + bgc.r + ", " + bgc.g + ", " + bgc.b + ", " + (bgc.a || 1) + ")");
+					}
+					if ("barType" in v)
+						shape.data("bartype", v.barType);
+					if ("vertical" in v) {
+						shape.data("vertical", v.vertical);
+						if (v.vertical)
+							$(shape.children("div")[0]).width("100%").height("45%");
+					}
+					break;
+				case "circle":
+					shape = addShape(new Circle());
+					if ("bgColor" in v) {
+						var bgc = validateColorObject(v.bgColor);
+						shape.css("background-color", "rgba(" + bgc.r + ", " + bgc.g + ", " + bgc.b + ", " + (bgc.a || 1) + ")");
+					}
+					break;
+			}
+
+			if ("shapename" in v) {
+				shape.data("shapename", v.shapename);
+				$($("#layer" + shape.data("shapeid")).children("p")[0]).text(shape.data("shapename")); // A little hacky way but dont want to update the whole thing again
+			}
+
+			shape.data("dock-bottom", v.dockbottom || false);
+			shape.data("dock-right", v.dockright || false);
+			if (v.left && v.top)
+				shape.offset({left: (v.dockright ? (window.innerWidth - v.left) : v.left), top: (v.dockbottom ? window.innerHeight - v.top : v.top)});
+			shape.width(v.width || 100);
+			shape.height(v.height || 25);
+			return shape;
+		}
+
+		function getHUDData() {
+			var usageobj = [];
+
+			usageobj.push({
+				type: "configNode",
+				usagetarg: $("#usagetarg").val()
+			});
+
+			$("#workspace").children().each(function(i, el) {
+				el = $(el);
+
+				var jsonobj = el.data("hbshape").getJSONObject(el);
+				jsonobj.shapename = el.data("shapename");
+
+				var top = el.position().top;
+				var left = el.position().left;
+				if (el.data("dock-right"))
+					left = window.innerWidth - left
+				if (el.data("dock-bottom"))
+					top = window.innerHeight - top
+
+				jsonobj.top = top;
+				jsonobj.left = left;
+				jsonobj.dockright = el.data("dock-right") || false;
+				jsonobj.dockbottom = el.data("dock-bottom") || false;
+
+				usageobj.push(jsonobj);
+			});
+
+			return JSON.stringify(usageobj);
+		}
+
+		$("#btn_startusage").click(function() {
+			gmod.UseHudBuilder(getHUDData());
+		});
+		$("#btn_uselocally").click(function() {
+			gmod.UseLocalHudBuilder(getHUDData());
+		});
+		$("#btn_copylua").click(function() {
+			gmod.ComputeStoreLua(getHUDData());
+		});
+		$("#btn_close").click(function() {
+			gmod.CloseHudBuilder(getHUDData());
+		});
+		$("#btn_openhelp").click(function() {
+			gmod.OpenURL("http://gmod.icemist.co/whb/");
+		});
+
+		$("#dock_left").click(function() {
+			selectedShapes.each(function(k, el) {
+				el.data("dock-right", false);
+			});
+			updateDocking();
+		})
+		$("#dock_right").click(function() {
+			selectedShapes.each(function(k, el) {
+				el.data("dock-right", true);
+			});
+			updateDocking();
+		})
+		$("#dock_top").click(function() {
+			selectedShapes.each(function(k, el) {
+				el.data("dock-bottom", false);
+			});
+			updateDocking();
+		})
+		$("#dock_bottom").click(function() {
+			selectedShapes.each(function(k, el) {
+				el.data("dock-bottom", true);
+			});
+			updateDocking();
+		})
+	</script>
+</body>
+</html>
